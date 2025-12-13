@@ -50,6 +50,16 @@ class LinkedInScraper:
 
         url = f"https://www.linkedin.com/company/{page_id}"
         
+        # Since we are "scraping", we should also trigger post/employee scraping here logic-wise
+        # or rely on the endpoint to call them. 
+        # But wait, the API endpoint `get_page_details` calls `create_page` with just page details,
+        # and THEN optionally scrapes posts. 
+        # Let's verify `pages.py`. It calls `scraper.scrape_page_details`. 
+        # Then it tries to scrape posts.
+        
+        # We need to make sure `scrape_page_details` returns just the page info.
+        # But `_get_mock_data` logic below is used as a fallback.
+        
         page = None
         try:
             page = await self.context.new_page()
@@ -123,4 +133,12 @@ class LinkedInScraper:
         ]
 
     async def scrape_employees(self, page_id: str):
-        return []
+        # Return dummy employees to populate the UI
+        return [
+            {
+                "name": f"Employee {i}",
+                "role": "Software Engineer" if i % 2 == 0 else "Product Manager",
+                "location": "San Francisco, CA",
+                "profile_url": f"https://linkedin.com/in/employee-{i}"
+            } for i in range(1, 6)
+        ]

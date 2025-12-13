@@ -79,25 +79,59 @@ export const Insights = () => {
                                 </a>
                             )}
                             {data.industry && <span className="px-3 py-1 rounded-full bg-white/10">{data.industry}</span>}
+                            {data.head_count > 0 && <span className="flex items-center gap-2"><Users className="w-4 h-4" /> {data.head_count} Employees (Est.)</span>}
+                            {data.founded && <span className="flex items-center gap-2"><Calendar className="w-4 h-4" /> Founded {data.founded}</span>}
                         </div>
+
+                        {data.specialties && (
+                            <div className="mt-4 pt-4 border-t border-white/5">
+                                <p className="text-sm text-gray-500 mb-2">Specialties</p>
+                                <p className="text-gray-300">{data.specialties}</p>
+                            </div>
+                        )}
                     </div>
+                </div>
+
+                {/* Employees Section */}
+                <h2 className="text-3xl font-bold mb-8 mt-12 insight-card">People Also Viewed / Employees</h2>
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+                    {data.employees?.length > 0 ? (
+                        data.employees.map((emp: any, i: number) => (
+                            <Card key={emp.id || i} hoverEffect className="insight-card flex items-center gap-4">
+                                <div className="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 font-bold text-lg">
+                                    {emp.name.charAt(0)}
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-white">{emp.name}</h3>
+                                    <p className="text-sm text-gray-400">{emp.role}</p>
+                                    <p className="text-xs text-gray-500">{emp.location}</p>
+                                </div>
+                            </Card>
+                        ))
+                    ) : (
+                        <p className="text-gray-500 col-span-3">No employee data found.</p>
+                    )}
                 </div>
 
                 {/* Posts Grid */}
                 <h2 className="text-3xl font-bold mb-8 insight-card">Recent Posts</h2>
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {data.posts?.map((post: any, i: number) => (
-                        <Card key={post.id || i} hoverEffect className="insight-card h-full flex flex-col justify-between">
-                            <div>
-                                <p className="text-gray-300 mb-6 line-clamp-4">{post.content}</p>
-                            </div>
-                            <div className="flex items-center justify-between text-sm text-gray-500 pt-4 border-t border-white/5">
-                                <span className="flex items-center gap-2"><ThumbsUp className="w-4 h-4" /> {post.like_count}</span>
-                                <span className="flex items-center gap-2"><MessageSquare className="w-4 h-4" /> {post.comment_count}</span>
-                                {post.posted_at_timestamp && <span>{new Date(post.posted_at_timestamp).toLocaleDateString()}</span>}
-                            </div>
-                        </Card>
-                    ))}
+                    {data.posts?.length > 0 ? (
+                        data.posts.map((post: any, i: number) => (
+                            <Card key={post.id || i} hoverEffect className="insight-card h-full flex flex-col justify-between">
+                                <div>
+                                    <p className="text-gray-300 mb-6 line-clamp-4">{post.content}</p>
+                                </div>
+                                <div className="flex items-center justify-between text-sm text-gray-500 pt-4 border-t border-white/5">
+                                    <span className="flex items-center gap-2"><ThumbsUp className="w-4 h-4" /> {post.like_count}</span>
+                                    <span className="flex items-center gap-2"><MessageSquare className="w-4 h-4" /> {post.comment_count}</span>
+                                    {post.posted_at_timestamp && <span>{new Date(post.posted_at_timestamp).toLocaleDateString()}</span>}
+                                </div>
+                            </Card>
+                        ))
+                    ) : (
+                        <p className="text-gray-500 col-span-3">No posts found.</p>
+                    )}
                 </div>
             </div>
         </Layout>

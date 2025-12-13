@@ -48,6 +48,22 @@ async def create_posts(db: AsyncSession, page_id: int, posts: list[schemas.PostC
         await db.commit()
     return created_posts
 
+
+async def create_employees(db: AsyncSession, page_id: int, employees: list[schemas.EmployeeCreate]):
+    created_employees = []
+    for emp in employees:
+        # Basic dedup: check by name and page_id (not perfect but suffices for now)
+        result = await db.execute(select(Employee).filter(Employee.page_id == page_id, Employee.name == emp.name))
+        existing = result.scalars().first()
+        if not existing:
+            db_emp = Employee(page_id=page_id, **emp.model_dump())
+            db.add(db_emp)
+            created_employees.append(db_emp)
+    
+    if created_employees:
+        await db.commit()
+    return created_employees
+
 async def get_posts_by_page(db: AsyncSession, page_id: int, limit: int = 15, offset: int = 0):
     result = await db.execute(select(Post).filter(Post.page_id == page_id).limit(limit).offset(offset).order_by(Post.created_at.desc()))
     return result.scalars().all()

@@ -46,9 +46,21 @@ async def get_page_details(
         # Or scrape posts now if critical.
         # Let's scrape posts now for the "demo ready" feel where you see data immediately.
         
-        # scraped_posts = await scraper.scrape_posts(page_id)
-        # if scraped_posts:
-        #    await crud.create_posts(db, new_page.id, scraped_posts)
+        # Trigger scraping for posts and employees
+        scraped_posts = await scraper.scrape_posts(page_id)
+        if scraped_posts:
+            # We need to create post objects. 
+            # Note: The scraper returns dicts, we need to convert to schemas if crud expects schemas
+            # crud.create_posts expects list[schemas.PostCreate]
+            post_schemas = [schemas.PostCreate(**p) for p in scraped_posts]
+            await crud.create_posts(db, new_page.id, post_schemas)
+
+    
+        # Scrape and save employees
+        scraped_employees = await scraper.scrape_employees(page_id)
+        if scraped_employees:
+            emp_schemas = [schemas.EmployeeCreate(**e) for e in scraped_employees]
+            await crud.create_employees(db, new_page.id, emp_schemas)
         
         # Re-fetch the page to ensure relationships are eagerly loaded (prevents MissingGreenlet error)
         # and to match the PageDetail schema
