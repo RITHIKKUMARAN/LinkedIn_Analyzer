@@ -103,7 +103,7 @@ export const Home = () => {
             <section className="min-h-screen flex flex-col justify-center px-6 md:px-20 relative pt-20">
                 <div className="max-w-5xl">
                     <div className="overflow-hidden">
-                        <h1 className="hero-line text-[10vw] md:text-[7vw] leading-[0.9] font-bold tracking-tighter mix-blend-overlay">
+                        <h1 className="hero-line text-[10vw] md:text-[7vw] leading-[0.9] font-black tracking-tighter text-white">
                             UNLOCK THE
                         </h1>
                     </div>
@@ -113,10 +113,14 @@ export const Home = () => {
                         </h1>
                     </div>
 
-                    <p className="hero-desc text-xl md:text-2xl text-gray-400 mt-8 max-w-2xl font-light border-l-2 border-purple-500 pl-6">
-                        Advanced LinkedIn analytics powered by Neural Networks and Gemini AI.
-                        Detect hiring trends, growth signals, and competitor movements in real-time.
-                    </p>
+                    <div className="mt-8 max-w-3xl border-l-2 border-purple-500 pl-6">
+                        <p className="hero-desc font-mono text-sm md:text-lg tracking-[0.15em] uppercase leading-loose text-purple-200/90">
+                            Advanced LinkedIn analytics powered by <span className="text-white font-bold bg-purple-500/20 px-2 border border-purple-500/30">Neural Networks</span> and <span className="text-white font-bold bg-blue-500/20 px-2 border border-blue-500/30">Gemini AI</span>.
+                        </p>
+                        <p className="hero-desc font-mono text-sm md:text-lg tracking-[0.15em] uppercase leading-loose text-gray-400 mt-6">
+                            Detect hiring trends • growth signals • competitor movements in real-time.
+                        </p>
+                    </div>
 
                     <div className="hero-btn mt-12 flex flex-wrap gap-4">
                         <button
