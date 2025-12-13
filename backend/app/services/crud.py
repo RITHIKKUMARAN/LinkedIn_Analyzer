@@ -1,11 +1,16 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 from app.models.models import CompanyPage, Post, Employee
 from app.schemas import schemas
 from datetime import datetime
 
 async def get_page_by_linkedin_id(db: AsyncSession, linkedin_id: str):
-    result = await db.execute(select(CompanyPage).filter(CompanyPage.linkedin_id == linkedin_id))
+    result = await db.execute(
+        select(CompanyPage)
+        .options(selectinload(CompanyPage.posts), selectinload(CompanyPage.employees))
+        .filter(CompanyPage.linkedin_id == linkedin_id)
+    )
     return result.scalars().first()
 
 async def create_page(db: AsyncSession, page: schemas.PageCreate):

@@ -50,7 +50,9 @@ async def get_page_details(
         # if scraped_posts:
         #    await crud.create_posts(db, new_page.id, scraped_posts)
         
-        return new_page
+        # Re-fetch the page to ensure relationships are eagerly loaded (prevents MissingGreenlet error)
+        # and to match the PageDetail schema
+        return await crud.get_page_by_linkedin_id(db, page_id)
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
