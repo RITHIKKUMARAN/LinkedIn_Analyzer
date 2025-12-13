@@ -1,8 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 :root {
   --foreground-rgb: 255, 255, 255;
@@ -15,7 +13,8 @@ body {
   background: black;
   font-family: 'Inter', sans-serif;
   overflow-x: hidden;
-  cursor: none; /* Custom cursor */
+  cursor: none;
+  /* Custom cursor */
 }
 
 @layer utilities {
@@ -24,7 +23,7 @@ body {
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.05);
   }
-  
+
   .text-gradient {
     background-clip: text;
     -webkit-background-clip: text;
