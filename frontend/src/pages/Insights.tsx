@@ -219,26 +219,8 @@ export const Insights = () => {
                                 <p className="text-gray-400 font-mono text-sm">RECENT ACTIVITY</p>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                {data.posts?.length > 0 ? (
-                                    data.posts.map((post: any, i: number) => (
-                                        <div key={i} className="glass-card p-8 border-l-2 border-blue-500/50 bg-gradient-to-r from-white/5 to-transparent hover:from-white/10 transition-colors">
-                                            <p className="text-gray-300 leading-relaxed mb-6 font-light">
-                                                "{post.content}"
-                                            </p>
-                                            <div className="flex items-center gap-6 text-sm text-gray-400 font-mono">
-                                                <span className="flex items-center gap-2"><ThumbsUp className="w-4 h-4 text-blue-500" /> {post.like_count}</span>
-                                                <span className="flex items-center gap-2"><MessageSquare className="w-4 h-4 text-purple-500" /> {post.comment_count}</span>
-                                                <span className="ml-auto opacity-50">{post.posted_at_timestamp ? new Date(post.posted_at_timestamp).toLocaleDateString() : 'UNKNOWN DATE'}</span>
-                                            </div>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <DataVoid title="Silence Detected" subtitle="No recent transmissions found from this entity." />
-                                )}
-                            </div>
+                            <PostList initialPosts={data.posts} pageId={data.id} />
                         </div>
-
                     </div>
                 </section>
 
@@ -246,6 +228,113 @@ export const Insights = () => {
                     <p className="text-gray-500 font-mono text-xs spacing-widest">DEEPSOLV ANALYTICS v2.0 // SYSTEM ACTIVE</p>
                 </footer>
             </main>
+        </div>
+    );
+};
+
+const PostList = ({ initialPosts, pageId }: { initialPosts: any[], pageId: string }) => {
+    const [posts, setPosts] = useState(initialPosts || []);
+    const [page, setPage] = useState(1);
+    const [loadingMore, setLoadingMore] = useState(false);
+    const [hasMore, setHasMore] = useState(true);
+
+    const loadMore = async () => {
+        setLoadingMore(true);
+        try {
+            const nextPosts = await api.getPagePosts(pageId, page * 20, 20);
+            if (nextPosts.length === 0) setHasMore(false);
+            setPosts([...posts, ...nextPosts]);
+            setPage(p => p + 1);
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setLoadingMore(false);
+        }
+    };
+
+    return (
+        <div className="space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {posts.length > 0 ? (
+                    posts.map((post: any, i: number) => (
+                        <PostCard key={`${post.id}-${i}`} post={post} />
+                    ))
+                ) : (
+                    <DataVoid title="Silence Detected" subtitle="No recent transmissions found from this entity." />
+                )}
+            </div>
+
+            {hasMore && posts.length > 0 && (
+                <div className="flex justify-center pt-8">
+                    <button
+                        onClick={loadMore}
+                        disabled={loadingMore}
+                        className="px-8 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full transition-all text-sm font-bold tracking-widest flex items-center gap-2"
+                    >
+                        {loadingMore ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowRight className="w-4 h-4 rotate-90" />}
+                        LOAD OLDER TRANSMISSIONS
+                    </button>
+                </div>
+            )}
+        </div>
+    );
+};
+
+const PostCard = ({ post }: { post: any }) => {
+    const [showComments, setShowComments] = useState(false);
+    const [comments, setComments] = useState<any[]>([]);
+    const [loadingComments, setLoadingComments] = useState(false);
+
+    const toggleComments = async () => {
+        if (!showComments && comments.length === 0) {
+            setLoadingComments(true);
+            try {
+                const fetched = await api.getPostComments(post.id);
+                setComments(fetched);
+            } catch (e) {
+                console.error(e);
+            } finally {
+                setLoadingComments(false);
+            }
+        }
+        setShowComments(!showComments);
+    };
+
+    return (
+        <div className="glass-card p-8 border-l-2 border-blue-500/50 bg-gradient-to-r from-white/5 to-transparent hover:from-white/10 transition-colors flex flex-col h-full">
+            <p className="text-gray-300 leading-relaxed mb-6 font-light flex-grow">
+                "{post.content}"
+            </p>
+            <div className="flex items-center gap-6 text-sm text-gray-400 font-mono border-t border-white/5 pt-4">
+                <span className="flex items-center gap-2"><ThumbsUp className="w-4 h-4 text-blue-500" /> {post.like_count}</span>
+                <button
+                    onClick={toggleComments}
+                    className="flex items-center gap-2 hover:text-white transition-colors"
+                >
+                    <MessageSquare className="w-4 h-4 text-purple-500" /> {post.comment_count}
+                </button>
+                <span className="ml-auto opacity-50">{post.posted_at_timestamp ? new Date(post.posted_at_timestamp).toLocaleDateString() : 'UNKNOWN DATE'}</span>
+            </div>
+
+            {/* Comments Expansion */}
+            {showComments && (
+                <div className="mt-6 space-y-4 pl-4 border-l border-white/10 animate-fade-in">
+                    {loadingComments ? (
+                        <div className="flex items-center gap-2 text-xs text-gray-500">
+                            <Loader2 className="w-3 h-3 animate-spin" /> Decrypting chatter...
+                        </div>
+                    ) : comments.length > 0 ? (
+                        comments.map((comment, idx) => (
+                            <div key={idx} className="text-sm">
+                                <span className="font-bold text-gray-300">{comment.author || 'Anonymous'}:</span>
+                                <span className="text-gray-400 ml-2">{comment.text}</span>
+                            </div>
+                        ))
+                    ) : (
+                        <p className="text-xs text-gray-600 italic">No audible chatter detected.</p>
+                    )}
+                </div>
+            )}
         </div>
     );
 };
