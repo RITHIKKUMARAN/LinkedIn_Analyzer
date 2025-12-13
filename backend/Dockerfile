@@ -1,4 +1,4 @@
-FROM python:3.10-slim
+FROM python:3.11
 
 WORKDIR /app
 
@@ -16,7 +16,7 @@ RUN playwright install-deps
 
 COPY requirements.txt .
 RUN pip install --upgrade pip
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --default-timeout=1000 --no-cache-dir -r requirements.txt
 RUN playwright install chromium
 
 COPY . .

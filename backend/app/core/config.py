@@ -7,8 +7,10 @@ class Settings(BaseSettings):
     LINKEDIN_USERNAME: str = ""
     LINKEDIN_PASSWORD: str = ""
     MANUAL_LOGIN: bool = False
+    GEMINI_API_KEY: str = ""
 
     class Config:
         env_file = ".env"
+        extra = "ignore"
 
 settings = Settings()
