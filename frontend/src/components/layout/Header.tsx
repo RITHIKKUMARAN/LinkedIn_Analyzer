@@ -49,11 +49,13 @@ export const Header = () => {
         >
             {/* Logo */}
             <div
+                className="logo text-2xl font-bold font-display tracking-tighter cursor-pointer flex items-center gap-2 group"
                 onClick={() => navigate('/')}
-                className="nav-logo text-2xl font-bold tracking-tighter flex items-center gap-2 pointer-events-auto cursor-pointer group"
             >
-                <div className="w-3 h-3 bg-white rounded-full group-hover:scale-125 transition-transform duration-300" />
-                <span>DEEPSOLV.</span>
+                <div className="w-8 h-8 bg-gradient-to-br from-white to-gray-400 rounded-lg flex items-center justify-center group-hover:rotate-12 transition-transform duration-500">
+                    <div className="w-3 h-3 bg-black rounded-sm" />
+                </div>
+                RITHIK7.
             </div>
 
             {/* Navigation Links */}

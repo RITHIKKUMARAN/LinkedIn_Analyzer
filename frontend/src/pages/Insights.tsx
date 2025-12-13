@@ -68,6 +68,11 @@ export const Insights = () => {
                             { y: 50, opacity: 0 },
                             { y: 0, opacity: 1, stagger: 0.1, duration: 0.8, ease: "back.out(1.2)" },
                             "-=0.5"
+                        )
+                        .fromTo(".website-link",
+                            { y: 20, opacity: 0 },
+                            { y: 0, opacity: 1, duration: 0.8, ease: "back.out(1.2)" },
+                            "-=0.6"
                         );
 
                     // Parallax for Profile Image
@@ -168,6 +173,22 @@ export const Insights = () => {
                                     <Stat label="Headcount" value={data.head_count} />
                                     <Stat label="Founded" value={data.founded || "N/A"} />
                                 </div>
+
+                                {data.website && (
+                                    <a
+                                        href={data.website.startsWith('http') ? data.website : `https://${data.website}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="website-link inline-flex items-center gap-3 px-8 py-4 mt-8 bg-white/5 border border-white/10 rounded-full hover:bg-white/10 hover:border-blue-500/50 hover:shadow-[0_0_30px_rgba(59,130,246,0.2)] transition-all duration-300 group overflow-hidden relative"
+                                    >
+                                        <div className="absolute inset-0 bg-gradient-to-r from-blue-600/0 via-blue-600/10 to-blue-600/0 translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000" />
+                                        <Globe className="w-5 h-5 text-blue-400 group-hover:rotate-180 transition-transform duration-700" />
+                                        <span className="font-mono text-sm tracking-widest uppercase text-blue-100 group-hover:text-white">
+                                            Visit Official Nexus
+                                        </span>
+                                        <ArrowRight className="w-4 h-4 text-blue-400 -rotate-45 group-hover:rotate-0 group-hover:translate-x-1 transition-all duration-300" />
+                                    </a>
+                                )}
                             </div>
                         </div>
                     </div>
