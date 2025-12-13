@@ -252,7 +252,7 @@ class LinkedInScraper:
             
             post_elements = await page.query_selector_all('article') or await page.query_selector_all('.feed-shared-update-v2')
             
-            for p in post_elements[:5]: # just top 5
+            for p in post_elements[:20]: # Get up to 20 posts
                 try:
                     text_el = await p.query_selector('.feed-shared-update-v2__description') or await p.query_selector('.update-components-text')
                     text = await text_el.text_content() if text_el else ""

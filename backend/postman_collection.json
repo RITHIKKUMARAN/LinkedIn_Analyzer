@@ -1,0 +1,237 @@
+{
+    "info": {
+        "name": "LinkedIn Insights API",
+        "description": "API for scraping and analyzing LinkedIn Company Pages",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "variable": [
+        {
+            "key": "baseUrl",
+            "value": "http://localhost:8000/api/v1",
+            "type": "string"
+        }
+    ],
+    "item": [
+        {
+            "name": "Pages",
+            "item": [
+                {
+                    "name": "List All Pages (Paginated)",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/pages?skip=0&limit=10",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "pages"
+                            ],
+                            "query": [
+                                {
+                                    "key": "skip",
+                                    "value": "0",
+                                    "description": "Records to skip"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "10",
+                                    "description": "Max records (1-100)"
+                                }
+                            ]
+                        },
+                        "description": "Get all company pages with pagination"
+                    }
+                },
+                {
+                    "name": "Search Pages (with Filters)",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/pages/search?name=&industry=Technology&min_followers=1000&max_followers=100000&skip=0&limit=10",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "pages",
+                                "search"
+                            ],
+                            "query": [
+                                {
+                                    "key": "name",
+                                    "value": "",
+                                    "description": "Search by name (partial match)"
+                                },
+                                {
+                                    "key": "industry",
+                                    "value": "Technology",
+                                    "description": "Filter by industry"
+                                },
+                                {
+                                    "key": "min_followers",
+                                    "value": "1000",
+                                    "description": "Min follower count"
+                                },
+                                {
+                                    "key": "max_followers",
+                                    "value": "100000",
+                                    "description": "Max follower count"
+                                },
+                                {
+                                    "key": "skip",
+                                    "value": "0"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "10"
+                                }
+                            ]
+                        },
+                        "description": "Search and filter pages by name, industry, follower count range"
+                    }
+                },
+                {
+                    "name": "Get Page by LinkedIn ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/pages/deepsolv",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "pages",
+                                "deepsolv"
+                            ]
+                        },
+                        "description": "Get details of a specific page. If not in DB, scrapes it in real-time."
+                    }
+                },
+                {
+                    "name": "Get Page Posts (Paginated)",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/pages/deepsolv/posts?skip=0&limit=15",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "pages",
+                                "deepsolv",
+                                "posts"
+                            ],
+                            "query": [
+                                {
+                                    "key": "skip",
+                                    "value": "0"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "15",
+                                    "description": "Max 50 per request"
+                                }
+                            ]
+                        },
+                        "description": "Get recent posts for a page with pagination"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Posts",
+            "item": [
+                {
+                    "name": "Get Post with Comments",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/posts/1",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "posts",
+                                "1"
+                            ]
+                        },
+                        "description": "Get a specific post by ID, including its comments"
+                    }
+                },
+                {
+                    "name": "Get Post Comments (Paginated)",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/posts/1/comments?skip=0&limit=20",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "posts",
+                                "1",
+                                "comments"
+                            ],
+                            "query": [
+                                {
+                                    "key": "skip",
+                                    "value": "0"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "20"
+                                }
+                            ]
+                        },
+                        "description": "Get comments for a post with pagination"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Health Check",
+            "item": [
+                {
+                    "name": "API Health",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "http://localhost:8000/",
+                            "host": [
+                                "http://localhost:8000"
+                            ],
+                            "path": [
+                                ""
+                            ]
+                        },
+                        "description": "Check if API is running"
+                    }
+                },
+                {
+                    "name": "OpenAPI Docs",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "http://localhost:8000/docs",
+                            "host": [
+                                "http://localhost:8000"
+                            ],
+                            "path": [
+                                "docs"
+                            ]
+                        },
+                        "description": "Interactive Swagger UI documentation"
+                    }
+                }
+            ]
+        }
+    ]
+}

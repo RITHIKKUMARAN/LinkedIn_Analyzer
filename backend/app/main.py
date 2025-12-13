@@ -1,7 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api.endpoints import pages
+from app.api.endpoints import pages, chat
 from app.core.database import engine, Base
+from app.core.config import settings
 
 app = FastAPI(
     title="LinkedIn Insights API",
@@ -46,7 +47,8 @@ async def startup():
         import traceback
         traceback.print_exc()
 
-app.include_router(pages.router, prefix="/api/v1")
+app.include_router(pages.router, prefix="/api/v1", tags=["pages"])
+app.include_router(chat.router, prefix="/api/v1", tags=["chat"])
 
 @app.get("/")
 async def root():

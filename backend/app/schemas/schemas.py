@@ -59,3 +59,32 @@ class Employee(EmployeeBase):
 class PageDetail(Page):
     posts: List[Post] = []
     employees: List[Employee] = []
+
+
+# Comment Schemas
+class CommentBase(BaseModel):
+    author_name: Optional[str] = None
+    content: str
+
+class CommentCreate(CommentBase):
+    pass
+
+class Comment(CommentBase):
+    id: int
+    post_id: int
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class PostWithComments(Post):
+    comments: List[Comment] = []
+
+
+# Paginated Response
+class PaginatedResponse(BaseModel):
+    items: List
+    total: int
+    skip: int
+    limit: int
+    has_more: bool
