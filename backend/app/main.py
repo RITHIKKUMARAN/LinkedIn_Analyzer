@@ -28,8 +28,23 @@ app.add_middleware(
 
 @app.on_event("startup")
 async def startup():
+    # Initialize database tables
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+    
+    # Initialize and login to scraper
+    print("=" * 50)
+    print("ATTEMPTING TO START SCRAPER...")
+    print("=" * 50)
+    try:
+        from app.api.endpoints.pages import scraper
+        print("Scraper imported successfully")
+        await scraper.start()
+        print("Scraper.start() completed")
+    except Exception as e:
+        print(f"ERROR starting scraper: {e}")
+        import traceback
+        traceback.print_exc()
 
 app.include_router(pages.router, prefix="/api/v1")
 

@@ -5,6 +5,9 @@ import { Card } from '../components/ui/Card';
 import { api } from '../services/api';
 import { Loader2, Users, MapPin, Globe, Calendar, ThumbsUp, MessageSquare } from 'lucide-react';
 import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+gsap.registerPlugin(ScrollTrigger);
 
 export const Insights = () => {
     const { id } = useParams<{ id: string }>();
@@ -19,11 +22,39 @@ export const Insights = () => {
                 const result = await api.getPage(id);
                 setData(result);
 
-                // Animation
-                gsap.fromTo(".insight-card",
-                    { y: 50, opacity: 0 },
-                    { y: 0, opacity: 1, duration: 0.8, stagger: 0.1, ease: "power3.out", delay: 0.2 }
-                );
+                // Wait for DOM
+                setTimeout(() => {
+                    // Header Parallax
+                    gsap.fromTo(".header-image",
+                        { y: 0 },
+                        {
+                            y: 100,
+                            scrollTrigger: {
+                                trigger: ".header-section",
+                                start: "top top",
+                                end: "bottom top",
+                                scrub: true
+                            }
+                        }
+                    );
+
+                    // Staggered Cards
+                    gsap.fromTo(".insight-card",
+                        { y: 100, opacity: 0 },
+                        {
+                            y: 0,
+                            opacity: 1,
+                            duration: 0.8,
+                            stagger: 0.1,
+                            ease: "power3.out",
+                            scrollTrigger: {
+                                trigger: ".content-section",
+                                start: "top 80%",
+                            }
+                        }
+                    );
+                }, 100);
+
             } catch (err) {
                 setError('Failed to fetch data. Is the Page ID correct?');
             } finally {
@@ -31,6 +62,10 @@ export const Insights = () => {
             }
         };
         fetchData();
+
+        return () => {
+            ScrollTrigger.getAll().forEach(t => t.kill());
+        };
     }, [id]);
 
     if (loading) {
@@ -61,11 +96,11 @@ export const Insights = () => {
         <Layout>
             <div className="container mx-auto px-6 py-12">
                 {/* Header */}
-                <div className="flex flex-col md:flex-row gap-8 items-start mb-12 insight-card">
+                <div className="header-section flex flex-col md:flex-row gap-8 items-start mb-12">
                     <img
                         src={data.profile_image_url || "https://via.placeholder.com/150"}
                         alt={data.name}
-                        className="w-32 h-32 rounded-2xl object-cover border-2 border-white/10"
+                        className="header-image w-32 h-32 rounded-2xl object-cover border-2 border-white/10 z-10"
                     />
                     <div className="space-y-4 flex-1">
                         <h1 className="text-5xl font-display font-bold">{data.name}</h1>
@@ -92,46 +127,48 @@ export const Insights = () => {
                     </div>
                 </div>
 
-                {/* Employees Section */}
-                <h2 className="text-3xl font-bold mb-8 mt-12 insight-card">People Also Viewed / Employees</h2>
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-                    {data.employees?.length > 0 ? (
-                        data.employees.map((emp: any, i: number) => (
-                            <Card key={emp.id || i} hoverEffect className="insight-card flex items-center gap-4">
-                                <div className="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 font-bold text-lg">
-                                    {emp.name.charAt(0)}
-                                </div>
-                                <div>
-                                    <h3 className="font-bold text-white">{emp.name}</h3>
-                                    <p className="text-sm text-gray-400">{emp.role}</p>
-                                    <p className="text-xs text-gray-500">{emp.location}</p>
-                                </div>
-                            </Card>
-                        ))
-                    ) : (
-                        <p className="text-gray-500 col-span-3">No employee data found.</p>
-                    )}
-                </div>
+                <div className="content-section">
+                    {/* Employees Section */}
+                    <h2 className="text-3xl font-bold mb-8 mt-12 insight-card">People Also Viewed / Employees</h2>
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+                        {data.employees?.length > 0 ? (
+                            data.employees.map((emp: any, i: number) => (
+                                <Card key={emp.id || i} hoverEffect className="insight-card flex items-center gap-4">
+                                    <div className="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 font-bold text-lg">
+                                        {emp.name.charAt(0)}
+                                    </div>
+                                    <div>
+                                        <h3 className="font-bold text-white">{emp.name}</h3>
+                                        <p className="text-sm text-gray-400">{emp.role}</p>
+                                        <p className="text-xs text-gray-500">{emp.location}</p>
+                                    </div>
+                                </Card>
+                            ))
+                        ) : (
+                            <p className="text-gray-500 col-span-3">No employee data found.</p>
+                        )}
+                    </div>
 
-                {/* Posts Grid */}
-                <h2 className="text-3xl font-bold mb-8 insight-card">Recent Posts</h2>
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {data.posts?.length > 0 ? (
-                        data.posts.map((post: any, i: number) => (
-                            <Card key={post.id || i} hoverEffect className="insight-card h-full flex flex-col justify-between">
-                                <div>
-                                    <p className="text-gray-300 mb-6 line-clamp-4">{post.content}</p>
-                                </div>
-                                <div className="flex items-center justify-between text-sm text-gray-500 pt-4 border-t border-white/5">
-                                    <span className="flex items-center gap-2"><ThumbsUp className="w-4 h-4" /> {post.like_count}</span>
-                                    <span className="flex items-center gap-2"><MessageSquare className="w-4 h-4" /> {post.comment_count}</span>
-                                    {post.posted_at_timestamp && <span>{new Date(post.posted_at_timestamp).toLocaleDateString()}</span>}
-                                </div>
-                            </Card>
-                        ))
-                    ) : (
-                        <p className="text-gray-500 col-span-3">No posts found.</p>
-                    )}
+                    {/* Posts Grid */}
+                    <h2 className="text-3xl font-bold mb-8 insight-card">Recent Posts</h2>
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {data.posts?.length > 0 ? (
+                            data.posts.map((post: any, i: number) => (
+                                <Card key={post.id || i} hoverEffect className="insight-card h-full flex flex-col justify-between">
+                                    <div>
+                                        <p className="text-gray-300 mb-6 line-clamp-4">{post.content}</p>
+                                    </div>
+                                    <div className="flex items-center justify-between text-sm text-gray-500 pt-4 border-t border-white/5">
+                                        <span className="flex items-center gap-2"><ThumbsUp className="w-4 h-4" /> {post.like_count}</span>
+                                        <span className="flex items-center gap-2"><MessageSquare className="w-4 h-4" /> {post.comment_count}</span>
+                                        {post.posted_at_timestamp && <span>{new Date(post.posted_at_timestamp).toLocaleDateString()}</span>}
+                                    </div>
+                                </Card>
+                            ))
+                        ) : (
+                            <p className="text-gray-500 col-span-3">No posts found.</p>
+                        )}
+                    </div>
                 </div>
             </div>
         </Layout>

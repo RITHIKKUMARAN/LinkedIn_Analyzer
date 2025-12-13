@@ -23,6 +23,8 @@ services:
       - "8000:8000"
     environment:
       - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/linkedin_insights
+    env_file:
+      - ./backend/.env
     depends_on:
       - db
     restart: always
