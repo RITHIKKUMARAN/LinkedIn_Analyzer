@@ -2,6 +2,11 @@ import asyncio
 import logging
 from playwright.async_api import async_playwright
 from datetime import datetime
+import sys
+
+# Fix for Windows - Playwright requires ProactorEventLoop
+if sys.platform == 'win32':
+    asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
 
 logger = logging.getLogger(__name__)
 
@@ -70,7 +75,9 @@ class LinkedInScraper:
                 
                 page = await self.context.new_page()
                 try:
+                    logger.info("Navigating to LinkedIn login page...")
                     await page.goto("https://www.linkedin.com/login", timeout=30000)
+                    await asyncio.sleep(2)  # Let page settle
                     
                     if manual_login:
                         await page.fill("#username", self.username)
@@ -84,17 +91,35 @@ class LinkedInScraper:
                         print("="*60 + "\n")
                         await asyncio.sleep(60)  # Give user time to log in
                     else:
+                        # Automated login with human-like behavior
+                        logger.info("Filling in credentials...")
                         await page.fill("#username", self.username)
+                        await asyncio.sleep(0.5)  # Human-like delay
                         await page.fill("#password", self.password)
+                        await asyncio.sleep(0.5)
+                        
+                        logger.info("Clicking login button...")
                         await page.click("button[type='submit']")
-                        await asyncio.sleep(5)
+                        
+                        # Wait for navigation with generous timeout
+                        try:
+                            await page.wait_for_url("**/feed/**", timeout=15000)
+                            logger.info("Login successful - redirected to feed")
+                        except Exception:
+                            # Might be on verification page or already logged in
+                            logger.warning("Did not redirect to feed, but continuing...")
+                        
+                        await asyncio.sleep(5)  # Extra wait for cookies to be set
                     
                     # Save cookies
                     cookies = await self.context.cookies()
-                    with open(cookie_file, 'w') as f:
-                        json.dump(cookies, f)
-                    logger.info(f"Cookies saved to {cookie_file}")
-                    print("DEBUG: Cookies saved successfully!")
+                    if cookies:
+                        with open(cookie_file, 'w') as f:
+                            json.dump(cookies, f)
+                        logger.info(f"Cookies saved to {cookie_file} ({len(cookies)} cookies)")
+                        print(f"DEBUG: Cookies saved successfully! ({len(cookies)} cookies)")
+                    else:
+                        logger.warning("No cookies to save - login may have failed")
                     
                     # If manual mode, close the visible browser and relaunch headless
                     if manual_login:
@@ -113,6 +138,8 @@ class LinkedInScraper:
                         
                 except Exception as e:
                     logger.error(f"Login process failed: {e}")
+                    import traceback
+                    traceback.print_exc()
                 finally:
                     await page.close()
             else:
@@ -143,76 +170,206 @@ class LinkedInScraper:
 
     async def scrape_page_details(self, page_id: str) -> dict:
         """
-        Scrapes public company details with robust error handling.
-        Always returns data - either real scraped data or fallback mock data.
+        Scrapes LinkedIn company page details using robust selector strategies.
+        Returns None if scraping fails (no mock data).
         """
-        # ALWAYS wrap everything in a try/except to ensure we never return 500
-        try:
-            # If browser failed to start, return mock data immediately
-            if not self.browser:
-                try:
-                    await self.start()
-                except Exception:
-                    pass
-                
-                if not self.browser:
-                    logger.warning(f"Browser not valid, returning offline mock for {page_id}")
-                    return self._get_mock_data(page_id)
-
-            url = f"https://www.linkedin.com/company/{page_id}"
-            page = None
-            
+        if not self.browser:
             try:
-                page = await self.context.new_page()
-                page.set_default_timeout(20000)  # 20 seconds max
+                await self.start()
+            except Exception as e:
+                logger.error(f"Failed to start browser: {e}")
+                return None
                 
-                logger.info(f"Navigating to {url}...")
-                
-                # Very short timeout - if it doesn't load fast, fall back to mock
-                await page.goto(url, timeout=20000, wait_until="commit")
-                
-                # Quick sleep for minimal JS
-                await asyncio.sleep(1)
-                
-                # Try to get basic data quickly
-                title = await page.title() or page_id
-                og_desc = await page.get_attribute('meta[property="og:description"]', 'content') or ""
-                og_image = await page.get_attribute('meta[property="og:image"]', 'content') or ""
-                
-                # Clean up name
-                name = title.replace(" | LinkedIn", "").replace("LinkedIn", "").strip()
-                if " - " in name:
-                    name = name.split(" - ")[0]
-                
-                data = {
-                    "linkedin_id": page_id,
-                    "name": name or page_id.title(),
-                    "description": og_desc or f"{page_id.title()} on LinkedIn",
-                    "website": f"https://www.linkedin.com/company/{page_id}",
-                    "industry": "Technology",
-                    "follower_count": 5000,
-                    "head_count": 500,
-                    "founded": "2015",
-                    "profile_image_url": og_image or "https://via.placeholder.com/150",
-                    "created_at": datetime.now()
-                }
-                
-                logger.info(f"Successfully scraped basic data for {page_id}")
-                return data
-                
-            except Exception as inner_e:
-                logger.warning(f"Scraping failed for {page_id}: {inner_e}")
-                return self._get_mock_data(page_id)
-            finally:
-                if page:
-                    try:
-                        await page.close()
-                    except:
-                        pass
-                        
-        except Exception as outer_e:
-            logger.error(f"Critical error scraping {page_id}: {outer_e}")
-            return self._get_mock_data(page_id)
+            if not self.browser:
+                logger.warning(f"Browser not available for scraping {page_id}")
+                return None
+
+        url = f"https://www.linkedin.com/company/{page_id}/about/"
+        page = None
+        
+        try:
+            page = await self.context.new_page()
+            page.set_default_timeout(30000)
+            
+            logger.info(f"Navigating to {url}")
+            await page.goto(url, timeout=30000, wait_until="domcontentloaded")
+            
+            # Wait for content to load
+            await asyncio.sleep(3)
+            
+            # Extract company name - multiple strategies
+            name = page_id.replace("-", " ").title()
+            try:
+                # Try h1 with specific classes
+                name_el = await page.query_selector('h1.org-top-card-summary__title') or \
+                          await page.query_selector('h1.top-card-layout__title') or \
+                          await page.query_selector('h1')
+                if name_el:
+                    name_text = await name_el.text_content()
+                    if name_text:
+                        name = name_text.strip()
+            except Exception as e:
+                logger.debug(f"Could not extract name: {e}")
+            
+            # Extract description
+            description = ""
+            try:
+                desc_el = await page.query_selector('p.break-words') or \
+                         await page.query_selector('div.org-top-card-summary-info-list__info-item') or \
+                         await page.query_selector('p[data-test-id="about-us__description"]')
+                if desc_el:
+                    desc_text = await desc_el.text_content()
+                    if desc_text:
+                        description = desc_text.strip()
+            except Exception as e:
+                logger.debug(f"Could not extract description: {e}")
+            
+            # Extract website
+            website = ""
+            try:
+                # Look for website link in the about section
+                website_el = await page.query_selector('a[data-test-id="about-us__website"]') or \
+                            await page.query_selector('dd a[href*="http"]')
+                if website_el:
+                    website = await website_el.get_attribute('href') or ""
+                    website = website.strip()
+            except Exception as e:
+                logger.debug(f"Could not extract website: {e}")
+            
+            # Extract industry
+            industry = "Technology"
+            try:
+                # Industry is typically in a definition list
+                dt_elements = await page.query_selector_all('dt')
+                for dt in dt_elements:
+                    dt_text = await dt.text_content()
+                    if dt_text and 'industry' in dt_text.lower():
+                        dd = await dt.evaluate_handle('el => el.nextElementSibling')
+                        if dd:
+                            industry_text = await dd.evaluate('el => el.textContent')
+                            if industry_text:
+                                industry = industry_text.strip()
+                                break
+            except Exception as e:
+                logger.debug(f"Could not extract industry: {e}")
+            
+            # Extract follower count
+            follower_count = 0
+            try:
+                # Various selectors for follower count
+                follower_el = await page.query_selector('div.org-top-card-summary-info-list__info-item:has-text("followers")') or \
+                             await page.query_selector('div:has-text("followers")')
+                if follower_el:
+                    follower_text = await follower_el.text_content()
+                    if follower_text:
+                        import re
+                        # Extract numbers and handle K/M suffixes
+                        match = re.search(r'([\d,]+\.?\d*)\s*([KMB]?)', follower_text.replace(',', ''))
+                        if match:
+                            num = float(match.group(1))
+                            suffix = match.group(2).upper()
+                            multiplier = {'K': 1000, 'M': 1000000, 'B': 1000000000}.get(suffix, 1)
+                            follower_count = int(num * multiplier)
+            except Exception as e:
+                logger.debug(f"Could not extract followers: {e}")
+            
+            # Extract employee count
+            head_count = 0
+            try:
+                # Look for employee count
+                for dt in await page.query_selector_all('dt'):
+                    dt_text = await dt.text_content()
+                    if dt_text and ('employees' in dt_text.lower() or 'company size' in dt_text.lower()):
+                        dd = await dt.evaluate_handle('el => el.nextElementSibling')
+                        if dd:
+                            employee_text = await dd.evaluate('el => el.textContent')
+                            if employee_text:
+                                import re
+                                # Extract first number or range
+                                match = re.search(r'([\d,]+)', employee_text.replace(',', ''))
+                                if match:
+                                    head_count = int(match.group(1))
+                                break
+            except Exception as e:
+                logger.debug(f"Could not extract employee count: {e}")
+            
+            # Extract founded year
+            founded = ""
+            try:
+                for dt in await page.query_selector_all('dt'):
+                    dt_text = await dt.text_content()
+                    if dt_text and 'founded' in dt_text.lower():
+                        dd = await dt.evaluate_handle('el => el.nextElementSibling')
+                        if dd:
+                            founded_text = await dd.evaluate('el => el.textContent')
+                            if founded_text:
+                                founded = founded_text.strip()
+                                break
+            except Exception as e:
+                logger.debug(f"Could not extract founded year: {e}")
+            
+            # Extract profile image
+            profile_image_url = ""
+            try:
+                img_el = await page.query_selector('img.org-top-card-primary-content__logo') or \
+                         await page.query_selector('img[alt*="logo"]') or \
+                         await page.query_selector('img.company-logo')
+                if img_el:
+                    profile_image_url = await img_el.get_attribute('src') or ""
+            except Exception as e:
+                logger.debug(f"Could not extract profile image: {e}")
+            
+            
+            # Validate we got at least some data
+            if not name or len(name) < 2:
+                logger.warning(f"Scraping failed - insufficient data for {page_id}")
+                return None
+            
+            # Reject common failed scrape patterns (LinkedIn login/error pages)
+            invalid_names = [
+                'join linkedin',
+                'welcome back',
+                'linkedin',
+                'sign in',
+                'log in',
+                'login',
+                'welcome'
+            ]
+            
+            if name.lower().strip() in invalid_names:
+                logger.warning(f"Rejected invalid company name (likely login page): {name}")
+                return None
+            
+            # Reject if description contains login indicators
+            if description and any(phrase in description.lower() for phrase in ['join linkedin', 'sign in to linkedin', 'welcome back']):
+                logger.warning(f"Rejected company - description indicates login page for {page_id}")
+                return None
+            
+            data = {
+                "linkedin_id": page_id,
+                "name": name,
+                "description": description or f"{name} - LinkedIn Company Page",
+                "website": website or f"https://www.linkedin.com/company/{page_id}",
+                "industry": industry,
+                "follower_count": follower_count,
+                "head_count": head_count,
+                "founded": founded,
+                "profile_image_url": profile_image_url or "https://via.placeholder.com/150",
+                "created_at": datetime.now()
+            }
+            
+            logger.info(f"Successfully scraped data for {page_id}: {name}, {follower_count} followers")
+            return data
+            
+        except Exception as e:
+            logger.error(f"Failed to scrape {page_id}: {e}")
+            return None
+        finally:
+            if page:
+                try:
+                    await page.close()
+                except:
+                    pass
 
     def _get_mock_data(self, page_id: str) -> dict:
         """Returns fallback mock data when scraping fails."""
