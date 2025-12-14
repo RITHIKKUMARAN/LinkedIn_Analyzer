@@ -33,6 +33,7 @@ class LinkedInScraper:
             # Cookie-based authentication
             import os
             import json
+            import base64
             self.username = os.getenv("LINKEDIN_USERNAME")
             self.password = os.getenv("LINKEDIN_PASSWORD")
             manual_login = os.getenv("MANUAL_LOGIN", "false").lower() == "true"
@@ -41,9 +42,22 @@ class LinkedInScraper:
             print(f"DEBUG: LINKEDIN_USERNAME = '{self.username}'")
             print(f"DEBUG: MANUAL_LOGIN = {manual_login}")
             
-            # Try to load existing cookies first
+            # Try to load cookies from environment variable first (base64 encoded)
             cookies_loaded = False
-            if os.path.exists(cookie_file) and not manual_login:
+            cookies_base64 = os.getenv("LINKEDIN_COOKIES_BASE64")
+            if cookies_base64 and not manual_login:
+                try:
+                    cookies_json = base64.b64decode(cookies_base64).decode('utf-8')
+                    cookies = json.loads(cookies_json)
+                    await self.context.add_cookies(cookies)
+                    logger.info(f"Loaded LinkedIn cookies from environment variable ({len(cookies)} cookies)")
+                    print(f"DEBUG: Cookies loaded from LINKEDIN_COOKIES_BASE64!")
+                    cookies_loaded = True
+                except Exception as e:
+                    logger.warning(f"Failed to load base64 cookies: {e}")
+            
+            # Try to load existing cookies from file if not loaded from env
+            if not cookies_loaded and os.path.exists(cookie_file) and not manual_login:
                 try:
                     with open(cookie_file, 'r') as f:
                         cookies = json.load(f)
