@@ -23,7 +23,7 @@ app = FastAPI(
 origins = [
     "http://localhost:3000",
     "http://localhost:5173",  # Vite default
-    "https://linkedin-analyzer-rk.vercel.app", 
+    "https://linkedin-analyzer-rk.vercel.app",  # Vercel deployment
 ]
 
 app.add_middleware(
@@ -40,10 +40,7 @@ async def startup():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     
-    # Scraper initialization disabled due to Windows Playwright compatibility issues
-    # The scraper will be initialized on-demand when first scraping request is made
-    # Uncomment below if running on Linux/Mac or after fixing Windows event loop
-    """
+    # Initialize scraper on startup (works on Linux/Mac, where Render runs)
     print("=" * 50)
     print("ATTEMPTING TO START SCRAPER...")
     print("=" * 50)
@@ -56,7 +53,6 @@ async def startup():
         print(f"ERROR starting scraper: {e}")
         import traceback
         traceback.print_exc()
-    """
 
 app.include_router(pages.router, prefix="/api/v1", tags=["pages"])
 app.include_router(chat.router, prefix="/api/v1", tags=["chat"])
