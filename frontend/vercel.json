@@ -7,7 +7,7 @@
     "env": {
         "VITE_API_URL": {
             "description": "Backend API URL (will be Railway URL)",
-            "value": ""
+            "value": "https://linkedin-insights-api.onrender.com"
         }
     }
 }
