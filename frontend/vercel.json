@@ -5,9 +5,6 @@
     "installCommand": "npm install",
     "framework": "vite",
     "env": {
-        "VITE_API_URL": {
-            "description": "Backend API URL (will be Railway URL)",
-            "value": "https://linkedin-insights-api.onrender.com"
-        }
+        "VITE_API_URL": "https://linkedin-insights-api.onrender.com"
     }
 }
