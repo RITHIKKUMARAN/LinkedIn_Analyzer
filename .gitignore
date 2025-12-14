@@ -7,6 +7,7 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Node / Dependencies
 node_modules
 dist
 dist-ssr
@@ -22,6 +23,19 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Secrets (Crucial)
 .env
 backend/.env
 backend/linkedin_cookies.json
+
+# Python & Virtual Env
+__pycache__/
+*.pyc
+venv/
+backend/venv/
+
+# Junk / Temp Files
+DEPLOYMENT.md
+list_models.py
+models.txt
