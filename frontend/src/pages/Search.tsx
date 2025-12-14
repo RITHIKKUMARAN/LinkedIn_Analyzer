@@ -64,12 +64,12 @@ export const Search = () => {
         setHasSearched(true);
 
         try {
-            const results = await api.searchPages(
-                query || undefined,
-                industry || undefined,
-                minFollowers ? parseInt(minFollowers) : undefined,
-                maxFollowers ? parseInt(maxFollowers) : undefined
-            );
+            const results = await api.searchPages({
+                name: query || undefined,
+                industry: industry || undefined,
+                min_followers: minFollowers ? parseInt(minFollowers) : undefined,
+                max_followers: maxFollowers ? parseInt(maxFollowers) : undefined
+            });
 
             setSearchResults(results.items || []);
 
