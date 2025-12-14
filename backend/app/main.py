@@ -23,8 +23,7 @@ app = FastAPI(
 origins = [
     "http://localhost:3000",
     "http://localhost:5173",  # Vite default
-    # Add your Vercel domain after deployment:
-    # "https://your-app-name.vercel.app",
+    "https://linkedin-analyzer-rk.vercel.app", 
 ]
 
 app.add_middleware(
