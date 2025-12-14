@@ -1,3 +1,10 @@
+import sys
+import asyncio
+
+# CRITICAL: Must be set BEFORE any other async code runs on Windows
+if sys.platform == 'win32':
+    asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.endpoints import pages, chat
@@ -33,7 +40,10 @@ async def startup():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     
-    # Initialize and login to scraper
+    # Scraper initialization disabled due to Windows Playwright compatibility issues
+    # The scraper will be initialized on-demand when first scraping request is made
+    # Uncomment below if running on Linux/Mac or after fixing Windows event loop
+    """
     print("=" * 50)
     print("ATTEMPTING TO START SCRAPER...")
     print("=" * 50)
@@ -46,6 +56,7 @@ async def startup():
         print(f"ERROR starting scraper: {e}")
         import traceback
         traceback.print_exc()
+    """
 
 app.include_router(pages.router, prefix="/api/v1", tags=["pages"])
 app.include_router(chat.router, prefix="/api/v1", tags=["chat"])
