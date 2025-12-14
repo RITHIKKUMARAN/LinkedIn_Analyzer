@@ -23,7 +23,8 @@ app = FastAPI(
 origins = [
     "http://localhost:3000",
     "http://localhost:5173",  # Vite default
-    "*" # Allow all for dev
+    # Add your Vercel domain after deployment:
+    # "https://your-app-name.vercel.app",
 ]
 
 app.add_middleware(
