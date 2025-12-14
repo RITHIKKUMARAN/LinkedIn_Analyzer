@@ -38,11 +38,11 @@
 <div align="center">
 <div align="center">
 
-<a href="DEPLOYED_URL" target="_blank">
+<a href="https://linkedin-analyzer-rk.vercel.app" target="_blank">
 <img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&weight=600&size=28&duration=3000&pause=1000&color=10B981&background=FFFFFF00&center=true&vCenter=true&repeat=true&width=800&lines=Experience+The+Website+Coders;Click+to+Try+the+App+Now!" alt="Live Demo" />
 </a>
 
-[![Live Demo](https://img.shields.io/badge/🚀_LIVE_DEMO-Click_Here-00D9FF?style=for-the-badge&logo=vercel&logoColor=white&labelColor=10B981)](DEPLOYED_URL)
+[![Live Demo](https://img.shields.io/badge/🚀_LIVE_DEMO-Click_Here-00D9FF?style=for-the-badge&logo=vercel&logoColor=white&labelColor=10B981)](https://linkedin-analyzer-rk.vercel.app)
 
 </div>
 
