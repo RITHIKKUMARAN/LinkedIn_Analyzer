@@ -142,13 +142,19 @@ export const AiAnalyst = ({ pageId }: { pageId: string }) => {
                     w-14 h-14 rounded-full bg-gradient-to-tr from-blue-600 to-purple-600 
                     flex items-center justify-center shadow-lg shadow-blue-900/40
                     hover:scale-110 active:scale-95 transition-transform duration-300
-                    group relative
+                    group relative overflow-visible
                 `}
             >
-                {/* Ping animation effect */}
-                <span className="absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-20 animate-ping group-hover:animate-none"></span>
+                {/* Multiple Ripple Effects */}
+                <span className="absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75 animate-ping"></span>
+                <span className="absolute inline-flex h-[120%] w-[120%] rounded-full bg-purple-400 opacity-50 animate-ping" style={{ animationDelay: '0.5s' }}></span>
+                <span className="absolute inline-flex h-[140%] w-[140%] rounded-full bg-pink-400 opacity-30 animate-ping" style={{ animationDelay: '1s' }}></span>
 
-                {isOpen ? <X className="text-white w-6 h-6" /> : <Sparkles className="text-white w-6 h-6" />}
+                {isOpen ? (
+                    <X className="text-white w-6 h-6 relative z-10" />
+                ) : (
+                    <Bot className="text-white w-6 h-6 relative z-10 group-hover:animate-pulse" />
+                )}
             </button>
         </div>
     );
